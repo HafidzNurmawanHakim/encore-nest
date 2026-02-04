@@ -1,18 +1,19 @@
 import { api, APIError } from 'encore.dev/api';
 import applicationContext from 'src/applicationContext';
 import {
-  CreateUserDto,
-  UpdateUserDto,
   CreateUserRequest,
   UpdateUserRequest,
-  UserDto,
   PaginationQuery,
-  PaginatedUserResponse,
-  DeleteResponse,
   PaginationQueryDto,
-} from './dto/user.dto';
-import { validateDto } from 'src/common/helpers/validation.helper';
+  User,
+} from '../dto/user.dto';
 import { plainToInstance } from 'class-transformer';
+import {
+  ApiResponse,
+  DeleteResponse,
+  okResponse,
+  paginatedResponse,
+} from 'src/common/middleware/responseWrapper';
 
 // Helper to get service
 const getService = async () => {
@@ -23,12 +24,12 @@ const getService = async () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // CREATE
 // ─────────────────────────────────────────────────────────────────────────────
-export const createUser = api(
+export const createUser = api<CreateUserRequest>(
   { expose: true, method: 'POST', path: '/users' },
-  async (data: CreateUserRequest): Promise<UserDto> => {
-    const dto = await validateDto(CreateUserDto, data);
+  async (data): Promise<ApiResponse<User>> => {
     const service = await getService();
-    return service.create(dto);
+    const user = await service.create(data);
+    return okResponse(user);
   },
 );
 
@@ -37,10 +38,11 @@ export const createUser = api(
 // ─────────────────────────────────────────────────────────────────────────────
 export const getListUser = api(
   { expose: true, method: 'GET', path: '/users' },
-  async (query: PaginationQuery): Promise<PaginatedUserResponse> => {
+  async (query: PaginationQuery): Promise<ApiResponse<User[]>> => {
     const dto = plainToInstance(PaginationQueryDto, query);
     const service = await getService();
-    return service.getListPaginated(dto);
+    const result = await service.getListPaginated(dto);
+    return paginatedResponse(result.data, result.meta);
   },
 );
 
@@ -49,28 +51,27 @@ export const getListUser = api(
 // ─────────────────────────────────────────────────────────────────────────────
 export const getUserById = api(
   { expose: true, method: 'GET', path: '/users/:id' },
-  async ({ id }: { id: number }): Promise<UserDto> => {
+  async ({ id }: { id: number }): Promise<ApiResponse<User | null>> => {
     const service = await getService();
     const user = await service.getById(id);
     if (!user) throw APIError.notFound('User not found');
-    return user;
+    return okResponse(user);
   },
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UPDATE
 // ─────────────────────────────────────────────────────────────────────────────
-export const updateUser = api(
+export const updateUser = api<UpdateUserRequest>(
   { expose: true, method: 'PUT', path: '/users/:id' },
   async ({
     id,
     ...data
-  }: { id: number } & UpdateUserRequest): Promise<UserDto> => {
-    const dto = await validateDto(UpdateUserDto, data);
+  }: { id: number } & UpdateUserRequest): Promise<ApiResponse<User>> => {
     const service = await getService();
-    const user = await service.update(id, dto);
+    const user = await service.update(id, data);
     if (!user) throw APIError.notFound('User not found');
-    return user;
+    return okResponse(user);
   },
 );
 
@@ -79,10 +80,10 @@ export const updateUser = api(
 // ─────────────────────────────────────────────────────────────────────────────
 export const deleteUser = api(
   { expose: true, method: 'DELETE', path: '/users/:id' },
-  async ({ id }: { id: number }): Promise<DeleteResponse> => {
+  async ({ id }: { id: number }): Promise<ApiResponse<DeleteResponse>> => {
     const service = await getService();
     const success = await service.delete(id);
     if (!success) throw APIError.notFound('User not found');
-    return { success };
+    return okResponse({ success });
   },
 );

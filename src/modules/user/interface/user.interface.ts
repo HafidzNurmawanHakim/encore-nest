@@ -1,16 +1,4 @@
-export class User {
-  id: number;
-  name: string;
-  fullname: string;
-  email: string;
-  role: string;
-  createdAt: Date;
-  updatedAt: Date;
-
-  constructor(partial: Partial<User>) {
-    Object.assign(this, partial);
-  }
-}
+import { User } from '../dto/user.dto';
 
 // Repository Interface (consolidated here for simplicity)
 export interface IUserRepository {

@@ -1,13 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
-  CreateUserDto,
-  UpdateUserDto,
   PaginationQueryDto,
-  PaginatedUserResponse,
-  UserDto,
-} from './dto/user.dto';
-import type { IUserRepository } from './user.entity';
-import { User } from './user.entity';
+  CreateUserRequest,
+  UpdateUserRequest,
+  User,
+} from '../dto/user.dto';
+import type { IUserRepository } from '../interface/user.interface';
 
 @Injectable()
 export class UserService {
@@ -15,19 +13,17 @@ export class UserService {
     @Inject('I_USER_REPOSITORY') private userRepository: IUserRepository,
   ) {}
 
-  async create(dto: CreateUserDto): Promise<UserDto> {
+  async create(dto: CreateUserRequest): Promise<User> {
     const user = await this.userRepository.create(dto);
     return this.toDto(user);
   }
 
-  async getList(): Promise<UserDto[]> {
+  async getList(): Promise<User[]> {
     const users = await this.userRepository.findAll();
     return users.map((u) => this.toDto(u));
   }
 
-  async getListPaginated(
-    query: PaginationQueryDto,
-  ): Promise<PaginatedUserResponse> {
+  async getListPaginated(query: PaginationQueryDto) {
     const page = query.page || 1;
     const limit = query.limit || 10;
 
@@ -47,12 +43,12 @@ export class UserService {
     };
   }
 
-  async getById(id: number): Promise<UserDto | null> {
+  async getById(id: number): Promise<User | null> {
     const user = await this.userRepository.findById(id);
     return user ? this.toDto(user) : null;
   }
 
-  async update(id: number, dto: UpdateUserDto): Promise<UserDto | null> {
+  async update(id: number, dto: UpdateUserRequest): Promise<User | null> {
     const user = await this.userRepository.update(id, dto);
     return user ? this.toDto(user) : null;
   }
@@ -61,13 +57,15 @@ export class UserService {
     return this.userRepository.delete(id);
   }
 
-  private toDto(user: User): UserDto {
+  private toDto(user: User): User {
     return {
       id: user.id,
       name: user.name,
       fullname: user.fullname,
       email: user.email,
       role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 }

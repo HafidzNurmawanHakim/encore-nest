@@ -1,16 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { AppService } from './app.service';
-import { UserService } from './module/user/user.service';
-import { UserModule } from './module/user/user.module';
+import { UserModule } from './modules/user/user.module';
+import { UploaderService } from './modules/uploader/uploader.service';
+import { UploaderModule } from './modules/uploader/uploader.module';
+import { UserService } from './modules/user/services/user.service';
 
 const applicationContext: Promise<{
-  appService: AppService;
   userService: UserService;
+  uploaderService: UploaderService;
 }> = NestFactory.createApplicationContext(AppModule).then((app) => {
   return {
-    appService: app.select(AppModule).get(AppService, { strict: true }),
     userService: app.select(UserModule).get(UserService, { strict: true }),
+    uploaderService: app
+      .select(UploaderModule)
+      .get(UploaderService, { strict: true }),
   };
 });
 

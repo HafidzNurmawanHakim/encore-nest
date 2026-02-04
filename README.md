@@ -67,9 +67,23 @@ src/
 ### 3. Pagination
 
 - [x] `GET /users` now supports `?page=1&limit=10` query params.
-- [x] Returns `PaginatedResponse` with `meta` (total, page, limit, totalPages).
+- [x] Returns global standardized response with `meta` (pagination info when applicable).
 
-### 4. Abstraction (Repository Pattern)
+### 4. Global Response & Error Handling
+
+- [x] **Universal Format**: All API responses are wrapped in `{ data, meta }`.
+- [x] **Automatic Error Handling**: Errors return `{ data: null, meta }` with appropriate status and message.
+- [x] **Centralized Pagination**: Global pagination types in `src/common/dto/pagination.dto.ts`.
+
+\*\*Error handling
+Gunakan APIError default Encore
+
+```import { APIError } from 'encore.dev/api';
+
+throw APIError.invalidArgument('message');
+```
+
+### 5. Abstraction (Repository Pattern)
 
 - [x] `IUserRepository` interface decouples service from ORM.
 - [x] `UserRepository` implements the interface using Drizzle.

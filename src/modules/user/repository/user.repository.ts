@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { User, IUserRepository } from './user.entity';
-import { users } from 'src/common/schema/user/user.schema';
+import { users } from 'src/modules/user/schema/user.schema';
 import { eq, count } from 'drizzle-orm';
 import { drizzleDb } from 'src/config/database';
+import { User } from '../dto/user.dto';
+import { IUserRepository } from '../interface/user.interface';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -18,12 +19,12 @@ export class UserRepository implements IUserRepository {
         role: data.role || 'user',
       })
       .returning();
-    return new User(newUser);
+    return newUser;
   }
 
   async findAll(): Promise<User[]> {
     const result = await this.db.select().from(users);
-    return result.map((u) => new User(u));
+    return result.map((u) => u);
   }
 
   async findAllPaginated(
@@ -42,14 +43,14 @@ export class UserRepository implements IUserRepository {
       .offset(offset);
 
     return {
-      data: result.map((u) => new User(u)),
+      data: result.map((u) => u),
       total,
     };
   }
 
   async findById(id: number): Promise<User | null> {
     const result = await this.db.select().from(users).where(eq(users.id, id));
-    return result.length ? new User(result[0]) : null;
+    return result.length ? result[0] : null;
   }
 
   async update(id: number, data: Partial<User>): Promise<User | null> {
@@ -61,7 +62,7 @@ export class UserRepository implements IUserRepository {
       })
       .where(eq(users.id, id))
       .returning();
-    return updatedUser ? new User(updatedUser) : null;
+    return updatedUser ? updatedUser : null;
   }
 
   async delete(id: number): Promise<boolean> {
